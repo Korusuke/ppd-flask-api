@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """The app module, containing the app factory function."""
 from flask import Flask
+from flask import current_app
+from ppd import celery
+from ppd.celery_util import init_celery
 from ppd.files.files import files_bp
 from ppd.jobs.jobs import jobs_bp
 from ppd.extensions import cors
-
+from pathlib import Path
 
 def create_app(config_object):
     """An application factory, as explained here:
@@ -14,13 +17,22 @@ def create_app(config_object):
     app = Flask(__name__)
     app.url_map.strict_slashes = False
     app.config.from_object(config_object)
+    init_celery(app, celery=celery)
     register_extensions(app)
     register_blueprints(app)
+    init_files(config_object)
     return app
 
 
 def register_extensions(app):
     """Register Flask extensions."""
+
+
+def init_files(config):
+    """Initialize the files folder if not present"""
+    Path(config.INPUT_FILES_PATH).mkdir(parents=True, exist_ok=True)
+    Path(config.OUTPUT_FILES_PATH).mkdir(parents=True, exist_ok=True)
+    Path(config.LOG_FILES_PATH).mkdir(parents=True, exist_ok=True)
 
 
 def register_blueprints(app):
@@ -31,3 +43,4 @@ def register_blueprints(app):
 
     app.register_blueprint(files_bp, url_prefix='/files')
     app.register_blueprint(jobs_bp, url_prefix='/jobs')
+
