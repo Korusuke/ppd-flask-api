@@ -17,9 +17,17 @@ def too_large(e):
 
 @files_bp.route('/')
 def list_files():
-    files = os.listdir(current_app.config['INPUT_FILES_PATH'])
-    print(files)
-    return str(files)
+    input_files = []
+    for path, subdirs, files in os.walk(current_app.config['INPUT_FILES_PATH']):
+        for name in files:
+            input_files.append(os.path.join(path, name).lstrip(
+                current_app.config['INPUT_FILES_PATH']))
+    res = {
+        'total_files': len(input_files),
+        'input_file_paths': input_files,
+        'status': 'success'
+    }
+    return make_response(jsonify(res), 200)
 
 
 @files_bp.route('/', methods=['POST'])
@@ -50,7 +58,7 @@ def upload_files():
             'file_path': os.path.join(id, filename)
         }
         return make_response(jsonify(res), 200)
-    
+
     res = {
         'status': 'error',
         'message': 'File Not Found'
