@@ -4,9 +4,9 @@ Configure Celery. See the configuration guide at ->
 http://docs.celeryproject.org/en/master/userguide/configuration.html#configuration
 """
 
-## Broker settings.
+# Broker settings.
 broker_url = 'redis://localhost:6379/0'
-broker_heartbeat=0
+broker_heartbeat = 0
 
 # List of modules to import when the Celery worker starts.
 imports = ('ppd.jobs.utils',)
@@ -16,7 +16,7 @@ task_annotations = {
 }
 task_track_started = True
 
-## Using the database to store task state and results.
+# Using the database to store task state and results.
 result_backend = 'redis://localhost:6379/1'
 #result_persistent = False
 

@@ -8,13 +8,14 @@ from flask import current_app
 
 @celery_app.task(bind=True)
 def rosetta_task(self, project_name, flags):
+    """Runs rosetta binary in background"""
     project_folder = os.path.join(
         current_app.config['PROJECT_FILES_PATH'], project_name)
 
     log_file = os.path.join(project_folder, 'stdout')
     err_file = os.path.join(project_folder, 'stderr')
 
-    base_cmd = 'python3 /mnt/Vault/Projects/NYU/test.py'
+    base_cmd = current_app.config['ROSETTA_PATH']
     flag_file = f' @flag_{project_name}'
     full_cmd = base_cmd + flag_file
 

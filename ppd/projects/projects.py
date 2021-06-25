@@ -8,6 +8,7 @@ projects_bp = Blueprint('projects_bp', __name__)
 
 @projects_bp.route('/')
 def list_projects():
+    """Returns a list of all project folders"""
     projects = [f.name for f in os.scandir(
         current_app.config['PROJECT_FILES_PATH']) if f.is_dir()]
 
@@ -21,6 +22,7 @@ def list_projects():
 
 @projects_bp.route('/', methods=['POST'])
 def create_new_project():
+    """Creates a new project folder"""
     project_name = request.form['project_name']
     print(project_name)
 

@@ -15,6 +15,10 @@ jobs_bp = Blueprint('jobs_bp', __name__)
 
 @jobs_bp.route('/')
 def get_running_jobs():
+    """
+    Returns all jobs in queue, 
+    including the ones in db but not in celery
+    """
     # Get all pending tasks from redis
     pending_tasks = redObj.hgetall('unacked')
     # Get all tasks in celery
@@ -51,6 +55,14 @@ def get_running_jobs():
 
 @jobs_bp.route('/create', methods=['POST'])
 def create_new_job():
+    """
+    Start a new job with given flags
+    Params:
+        - flags - contents of flag file to be supplied to rosetta
+        - project_name - Name of the project
+    Returns:
+        - task_id - celery task id for the new sim
+    """
     # TODO: Replace with rosetta
     flags = request.form['flags']
     project_name = request.form['project_name']
@@ -63,10 +75,10 @@ def create_new_job():
     temp_file = os.path.join(project_folder, 'filename.temp')
     # save file
     print(flags)
-    
+
     with open(temp_file, 'w') as f:
         f.writelines(flags)
-    
+
     # Create actual file to remove CRLF
     with open(temp_file, "r") as inf:
         with open(file_path, "w") as fixed:
@@ -86,6 +98,15 @@ def create_new_job():
 @jobs_bp.route('/status/<string:id>')
 @jobs_bp.route('/result/<string:id>')
 def job_status(id):
+    """
+    Returns current status of the background celery task
+    Params:
+        - id - celery task id 
+    Returns:
+        - state - celery task state
+        - result[Optional] - returns project name incase of success
+        - error[Optional] - returns the traceback incase of failure 
+    """
     print(id)
     task = rosetta_task.AsyncResult(id)
     state = task.state
@@ -93,7 +114,7 @@ def job_status(id):
         'task_id': id,
         'state': state
     }
-    
+
     if state == states.SUCCESS:
         res['result'] = task.get()
     elif state == states.FAILURE:

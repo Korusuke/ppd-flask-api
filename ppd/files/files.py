@@ -8,6 +8,10 @@ files_bp = Blueprint('files_bp', __name__)
 
 @files_bp.errorhandler(413)
 def too_large(e):
+    """
+    Returns a 413 error if the uploaded 
+    file is larger than 4096*4096
+    """
     res = {
         'status': 'error',
         'message': 'File is too large'
@@ -17,6 +21,12 @@ def too_large(e):
 
 @files_bp.route('/<string:project_name>')
 def list_files(project_name):
+    """
+    Params:
+        - project_name: project name created using /projects
+    Returns:
+        - input_file_paths: list of files present in the project folder 
+    """
     if project_name == '':
         res = {
             'status': 'error',
@@ -51,6 +61,12 @@ def list_files(project_name):
 
 @files_bp.route('/<string:project_name>', methods=['POST'])
 def upload_file(project_name):
+    """
+    Path Param:
+        - project_name: project name created using /projects
+    Body Param:
+        - File: the file to upload (must be of extension .pdb or .ppk)
+    """
     uploaded_file = request.files['file']
     project_name = secure_filename(project_name)
 
@@ -103,6 +119,13 @@ def upload_file(project_name):
 
 @files_bp.route('/<string:projectname>/<string:filename>')
 def download_file(projectname, filename):
+    """
+    Path Params:
+        - project_name: project name created using /projects
+        - filename: file name of the file inside the project that is to be downloaded
+    Returns:
+        - blob: the file to be downloaded as an attachment 
+    """
     project_name = secure_filename(projectname)
     project_folder = os.path.join(
         current_app.config['PROJECT_FILES_PATH'], project_name)
