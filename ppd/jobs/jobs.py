@@ -60,9 +60,20 @@ def create_new_job():
         current_app.config['PROJECT_FILES_PATH'], project_name)
 
     file_path = os.path.join(project_folder, filename)
+    temp_file = os.path.join(project_folder, 'filename.temp')
     # save file
-    with open(file_path, 'w') as f:
+    print(flags)
+    
+    with open(temp_file, 'w') as f:
         f.writelines(flags)
+    
+    # Create actual file to remove CRLF
+    with open(temp_file, "r") as inf:
+        with open(file_path, "w") as fixed:
+            for line in inf:
+                fixed.write(line.rstrip() + '\n')
+    os.remove(temp_file)
+
     task = rosetta_task.delay(project_name, flags)
     res = {
         'status': 'success',
