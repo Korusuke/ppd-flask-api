@@ -40,8 +40,7 @@ def list_files(project_name):
 
     for path, subdirs, files in os.walk(project_folder):
         for name in files:
-            project_files.append(os.path.join(path, name).lstrip(
-                current_app.config['PROJECT_FILES_PATH']))
+            project_files.append(name)
     res = {
         'total_files': len(project_files),
         'input_file_paths': project_files,
@@ -50,10 +49,10 @@ def list_files(project_name):
     return make_response(jsonify(res), 200)
 
 
-@files_bp.route('/', methods=['POST'])
-def upload_file():
+@files_bp.route('/<string:project_name>', methods=['POST'])
+def upload_file(project_name):
     uploaded_file = request.files['file']
-    project_name = secure_filename(request.form.get('project_name', ''))
+    project_name = secure_filename(project_name)
 
     if project_name == '':
         res = {

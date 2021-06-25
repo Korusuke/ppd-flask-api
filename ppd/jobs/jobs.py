@@ -1,10 +1,12 @@
-from flask import Blueprint, jsonify, make_response
+from flask import current_app, Blueprint, jsonify, make_response, request
 import json
-from ppd.jobs.utils import test_task
-from ppd import celery as celery_app
+import os
 import redis
 import itertools
+from ppd.jobs.utils import rosetta_task
+from ppd import celery as celery_app
 from celery import states
+from werkzeug.utils import secure_filename
 
 redObj = redis.StrictRedis(host='localhost', port=6379, db=0)  # Queue
 
@@ -50,18 +52,31 @@ def get_running_jobs():
 @jobs_bp.route('/create', methods=['POST'])
 def create_new_job():
     # TODO: Replace with rosetta
-    a = test_task.delay(1, 2)
-    b = test_task.delay(2, 3)
-    c = test_task.delay(4, 5)
-    r = [a.id, b.id, c.id]
-    return str(r)
+    flags = request.form['flags']
+    project_name = request.form['project_name']
+    project_name = secure_filename(project_name)
+    filename = f'flag_{project_name}'
+    project_folder = os.path.join(
+        current_app.config['PROJECT_FILES_PATH'], project_name)
+
+    file_path = os.path.join(project_folder, filename)
+    # save file
+    with open(file_path, 'w') as f:
+        f.writelines(flags)
+    task = rosetta_task.delay(project_name, flags)
+    res = {
+        'status': 'success',
+        'message': 'sim started successfully',
+        'task_id': task.id
+    }
+    return make_response(jsonify(res), 200)
 
 
 @jobs_bp.route('/status/<string:id>')
 @jobs_bp.route('/result/<string:id>')
 def job_status(id):
     print(id)
-    task = test_task.AsyncResult(id)
+    task = rosetta_task.AsyncResult(id)
     state = task.state
     res = {
         'task_id': id,
